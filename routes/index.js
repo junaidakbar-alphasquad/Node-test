@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import posts from './api/posts.js';
 import users from './api/users.js';
-
 const router = Router();
 router.get('/posts/:id',posts.getPost);
 router.delete('/posts/:id',posts.deletePost);
