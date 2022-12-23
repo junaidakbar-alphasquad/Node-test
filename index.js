@@ -41,6 +41,5 @@ app.post('/login', async (req, res) => {
 // app.use(Static(join(__dirname, 'public')))    
 //all routes
 app.use('/api', verifytoken, router)
-const PORT = process.env.PORT || 5000
- 
+const PORT = process.env.PORT || 5000 
 app.listen(PORT, () => console.log('port', PORT))
