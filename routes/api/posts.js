@@ -7,9 +7,9 @@ const posts = {
   getPosts: async (req, res) => {
     const {authData}=req.body
     const posts = await prisma.post.findMany({
-      where:{ user_id: authData.user[0].id}}
+      where:{ user_id: authData.user.id}}
     )
-    res.json({ posts, })
+    res.json(posts)
   },
 
   postPost: async (req, res) => {
