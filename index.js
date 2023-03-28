@@ -1,10 +1,5 @@
-import { join } from "path";
-import express, { json, urlencoded, static as Static } from "express";
-import { fileURLToPath } from "url";
+import express, { json, urlencoded } from "express";
 import router from "./routes/index.js";
-import path from "path";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 import logger from "./middleware/logger.js";
 import { createRequire } from "module";
 import verifytoken from "./middleware/verifytoken.js";
@@ -15,29 +10,68 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const cors = require("cors");
 //init middleware
-app.use(logger);
 app.use(json());
+app.use(logger);
 app.use(cors());
 app.use(urlencoded({ extended: false }));
 app.post("/login", async (req, res) => {
   let { email } = req.body;
-  const user = await prisma.user.findFirst({
-    where: { email, status: true },
-  });
-  if (user) {
-    jwt.sign({ user }, "secretkey", { expiresIn: "1h" }, (err, token) => {
-      if (err) {
-        return res.json("Error:", err);
-      }
-      return res.json({ token, user });
+  if (email) {
+    const user = await prisma.user.findFirst({
+      where: { email, status: true },
     });
+    if (user) {
+    let updated=  await prisma.user.update({
+        where: { id: user.id },
+        data: { loginCount: { increment: 1 } },
+      });
+      jwt.sign(
+        { email: user.email, id: user.id },
+        "secretkey",
+        { expiresIn: "1h" },
+        (err, token) => {
+          if (err) {
+            return res.json("Error:", err);
+          }
+          return res.json({ token, updated });
+        }
+      );
+    } else {
+      return res.json({ email, msg: `No Active User Found` });
+    }
   } else {
-    return res.json({ email, msg: `No Active User Found` });
+    return res.json({ email, msg: `Email is required` });
+  }
+});
+app.post("/Signup", async (req, res) => {
+  let { email, name } = req.body;
+  if (email && name) {
+    try {
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          status: true,
+          loginCount: 0,
+        },
+      });
+      return res
+        .status(201)
+        .json({ success: true, message: "User Created", user });
+    } catch (error) {
+      return res.status(403).json({
+        success: false,
+        message: "User Creation failed , Email already exist",
+        error,
+      });
+    }
+  } else {
+    return res.json({ email, msg: `Email and Name are required` });
   }
 });
 
 // app.use(Static(join(__dirname, 'public')))
 //all routes
 app.use("/api", verifytoken, router);
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("port", PORT));
+const PORT = process.env.PORT;
+app.listen(PORT);

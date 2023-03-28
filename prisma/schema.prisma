@@ -11,15 +11,25 @@ datasource db {
 }
 
 model User {
-  id     Int    @id @default(autoincrement())
-  email  String
-  name   String
-  status Boolean
+  id         Int     @id @default(autoincrement())
+  email      String  @unique
+  name       String
+  status     Boolean
+  loginCount Int
+  posts      Post[]
 }
 
 model Post {
-  id      Int    @id @default(autoincrement())
-  title   String
-  body    String
-  user_id Int
+  id        Int    @id @default(autoincrement())
+  title     String
+  body      String
+  user      User   @relation(fields: [auther_id], references: [id])
+  auther_id Int
+}
+
+model Logger {
+  id        Int    @id @default(autoincrement())
+  user_id   Int?
+  timestamp String
+  body      String
 }
