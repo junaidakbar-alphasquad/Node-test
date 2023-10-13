@@ -7,7 +7,10 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const require = createRequire(import.meta.url);
 const jwt = require("jsonwebtoken");
-const app = express();
+const app = express(),
+  bodyParser = require("body-parser"),
+  swaggerJsdoc = require("swagger-jsdoc"),
+  swaggerUi = require("swagger-ui-express");
 const cors = require("cors");
 //init middleware
 app.use(json());
@@ -21,7 +24,7 @@ app.post("/login", async (req, res) => {
       where: { email, status: true },
     });
     if (user) {
-    let updated=  await prisma.user.update({
+      let updated = await prisma.user.update({
         where: { id: user.id },
         data: { loginCount: { increment: 1 } },
       });
@@ -33,7 +36,7 @@ app.post("/login", async (req, res) => {
           if (err) {
             return res.json("Error:", err);
           }
-          return res.json({ token, updated });
+          return res.json({ token, user: updated });
         }
       );
     } else {
@@ -72,6 +75,39 @@ app.post("/Signup", async (req, res) => {
 
 // app.use(Static(join(__dirname, 'public')))
 //all routes
+const options = {
+  definition: {
+    openapi: "3.1.0",
+    info: {
+      title: "Test Express API with Swagger by Junaid",
+      version: "0.1.0",
+      description:
+        "This is a simple CRUD API application made with Express and documented with Swagger",
+      license: {
+        name: "MIT",
+        url: "https://spdx.org/licenses/MIT.html",
+      },
+      contact: {
+        name: "LogRocket",
+        url: "https://logrocket.com",
+        email: "info@email.com",
+      },
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+      },
+    ],
+  },
+  apis: ["./routes/*.js"],
+};
+
+const specs = swaggerJsdoc(options);
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, { explorer: true })
+);
 app.use("/api", verifytoken, router);
 const PORT = process.env.PORT;
 app.listen(PORT);
