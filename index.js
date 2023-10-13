@@ -40,10 +40,12 @@ app.post("/login", async (req, res) => {
         }
       );
     } else {
-      return res.json({ email, msg: `No Active User Found` });
+      return res.status(404).json({ email, msg: `No Active User Found` });
     }
   } else {
-    return res.json({ email, msg: `Email is required` });
+    return res
+      .status(418)
+      .json({ email, msg: `Email is required Sorry for status code :)` });
   }
 });
 app.post("/Signup", async (req, res) => {
